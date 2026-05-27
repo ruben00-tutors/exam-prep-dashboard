@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Exam Prep Campaign — Multi-Year Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --gs-50:  #F4F6FB;
+    --gs-100: #E3E8F0;
+    --gs-200: #9DACDE;
+    --gs-300: #6B86CC;
+    --gs-400: #3C69BD;
+    --gs-500: #0B2FAC;
+    --gs-600: #09268A;
+    --gs-700: #071C67;
+    --gs-800: #041365;
+    --gs-900: #020B23;
+
+    --bg: #FFFFFF;
+    --bg-tint: var(--gs-50);
+    --border: #E3E8F0;
+    --border-strong: #C9D2E4;
+    --text: var(--gs-900);
+    --text-dim: #6B7A99;
+    --text-faint: #9DACDE;
+
+    --primary: var(--gs-500);
+    --primary-soft: rgba(11,47,172,0.08);
+
+    --positive: #1A8754;
+    --positive-soft: rgba(26,135,84,0.10);
+    --negative: #C2333E;
+    --negative-soft: rgba(194,51,62,0.10);
+    --neutral: var(--text-dim);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Open Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(11,47,172,0.04), transparent 60%);
+    min-height: 100vh;
+    padding: 32px 40px 80px;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    border-bottom: 2px solid var(--gs-900);
+    padding-bottom: 28px; margin-bottom: 28px;
+  }
+  .header-left .eyebrow {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--primary); margin-bottom: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow::before {
+    content: ''; width: 8px; height: 8px; background: var(--primary); border-radius: 50%;
+  }
+  .header h1 {
+    font-weight: 800; font-size: 44px; line-height: 1.05; letter-spacing: -0.02em;
+    color: var(--gs-900);
+  }
+  .header h1 span { color: var(--primary); }
+  .header-sub {
+    color: var(--text-dim); font-size: 14px; margin-top: 10px; font-weight: 600;
+  }
+  .header-right {
+    text-align: right; font-size: 12px; color: var(--text-dim);
+    letter-spacing: 0.05em; font-weight: 600;
+  }
+  .header-right .live {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--gs-900); margin-bottom: 6px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px;
+  }
+  .header-right .live::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--primary); animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    background: transparent; border: none;
+    padding: 14px 24px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tab:hover { color: var(--gs-900); }
+  .tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .tab .badge {
+    background: var(--gs-100); color: var(--text-dim);
+    font-size: 10px; padding: 2px 8px; border-radius: 10px;
+    letter-spacing: 0.05em; font-weight: 700;
+  }
+  .tab.active .badge { background: var(--primary-soft); color: var(--primary); }
+
+  .tab-panel { display: none; animation: fade 0.3s ease; }
+  .tab-panel.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* FILTERS */
+  .filters {
+    display: flex; gap: 40px; align-items: center;
+    background: var(--bg-tint);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 24px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .filter-group { display: flex; align-items: center; gap: 14px; }
+  .filter-label {
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--gs-900); font-weight: 700;
+  }
+  .pill-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    background: #FFFFFF;
+    border: 1px solid var(--border-strong);
+    color: var(--gs-900);
+    padding: 8px 16px; font-size: 13px; font-weight: 600;
+    font-family: 'Open Sans', sans-serif;
+    cursor: pointer; transition: all 0.18s;
+    border-radius: 6px;
+  }
+  .pill:hover { border-color: var(--primary); color: var(--primary); }
+  .pill.active {
+    background: var(--primary); color: #FFFFFF;
+    border-color: var(--primary); font-weight: 700;
+    box-shadow: 0 2px 8px rgba(11,47,172,0.25);
+  }
+
+  /* KPI ROW */
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;
+    margin-bottom: 36px;
+  }
+  .kpi {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 22px 22px 18px;
+    position: relative; overflow: hidden;
+    transition: all 0.2s;
+  }
+  .kpi:hover {
+    border-color: var(--gs-200);
+    box-shadow: 0 4px 16px rgba(11,47,172,0.08);
+    transform: translateY(-1px);
+  }
+  .kpi-label {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 12px; font-weight: 700;
+  }
+  .kpi-value {
+    font-weight: 800; font-size: 34px; line-height: 1;
+    letter-spacing: -0.02em; color: var(--gs-900);
+  }
+  .kpi-sub {
+    margin-top: 8px; font-size: 12px; color: var(--text-dim); font-weight: 600;
+  }
+  .kpi.accent .kpi-value { color: var(--primary); }
+  .kpi-bar {
+    position: absolute; bottom: 0; left: 0; height: 3px;
+    background: var(--primary); transition: width 0.6s cubic-bezier(.2,.8,.2,1);
+  }
+
+  /* SECTION */
+  .section { margin-bottom: 36px; }
+  .section-title {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 20px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title h2 {
+    font-weight: 800; font-size: 22px; letter-spacing: -0.01em; color: var(--gs-900);
+  }
+  .section-title h2 span { color: var(--primary); }
+  .section-title .meta {
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px; }
+  .panel {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 22px;
+  }
+  .panel-title {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 18px; font-weight: 700;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .panel-title .tag {
+    background: var(--primary-soft); color: var(--primary);
+    padding: 4px 10px; border-radius: 4px; font-size: 10px;
+    letter-spacing: 0.08em; font-weight: 700;
+  }
+
+  /* FUNNEL */
+  .funnel { display: flex; flex-direction: column; gap: 12px; }
+  .funnel-step {
+    display: grid; grid-template-columns: 130px 1fr 120px;
+    align-items: center; gap: 16px;
+  }
+  .funnel-label {
+    font-size: 12px; color: var(--gs-900); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .funnel-bar-wrap {
+    height: 32px; background: var(--gs-50);
+    border-radius: 4px; overflow: hidden;
+  }
+  .funnel-bar {
+    height: 100%; transition: width 0.8s cubic-bezier(.2,.8,.2,1);
+    background: linear-gradient(90deg, var(--primary) 0%, var(--gs-400) 100%);
+  }
+  .funnel-value {
+    font-weight: 800; font-size: 18px; text-align: right; color: var(--gs-900);
+  }
+  .funnel-value .pct {
+    display: block; font-size: 11px; color: var(--text-dim);
+    margin-top: 2px; font-weight: 600;
+  }
+
+  .chart-wrap { position: relative; height: 320px; }
+  .chart-wrap.tall { height: 380px; }
+
+  /* TABLE */
+  .table-wrap {
+    overflow-x: auto;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: var(--bg-tint); color: var(--gs-900);
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 700;
+    padding: 14px 16px; text-align: right;
+    border-bottom: 2px solid var(--border-strong);
+  }
+  thead th:first-child, thead th:nth-child(2), thead th:nth-child(3) { text-align: left; }
+  tbody td {
+    padding: 14px 16px; text-align: right;
+    border-bottom: 1px solid var(--border);
+    color: var(--gs-900); font-weight: 600;
+  }
+  tbody tr:hover { background: var(--bg-tint); }
+  tbody tr:last-child td { border-bottom: none; }
+  .country-tag {
+    display: inline-block; min-width: 32px; padding: 3px 8px;
+    text-align: center; font-size: 11px; font-weight: 700;
+    border-radius: 4px;
+  }
+  .country-tag.es { background: var(--gs-500); color: #FFFFFF; }
+  .country-tag.fr { background: var(--gs-400); color: #FFFFFF; }
+  .country-tag.it { background: var(--gs-200); color: var(--gs-900); }
+
+  /* REV CARDS */
+  .rev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .rev-card {
+    background: #FFFFFF; border: 1px solid var(--border);
+    border-radius: 8px; padding: 22px;
+    position: relative; overflow: hidden;
+    transition: all 0.2s;
+  }
+  .rev-card:hover {
+    box-shadow: 0 4px 16px rgba(11,47,172,0.08); transform: translateY(-1px);
+  }
+  .rev-card::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 4px; height: 100%; background: var(--primary);
+  }
+  .rev-card.es::before { background: var(--gs-500); }
+  .rev-card.fr::before { background: var(--gs-400); }
+  .rev-card.it::before { background: var(--gs-200); }
+  .rev-card-country {
+    font-size: 11px; letter-spacing: 0.15em; color: var(--text-dim);
+    margin-bottom: 6px; font-weight: 700;
+  }
+  .rev-card h3 {
+    font-weight: 800; font-size: 22px; margin-bottom: 16px; color: var(--gs-900);
+  }
+  .rev-card .rev-row {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px;
+  }
+  .rev-card .rev-row span:first-child {
+    color: var(--text-dim); font-size: 11px; letter-spacing: 0.08em;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .rev-card .rev-row span:last-child { color: var(--gs-900); font-weight: 700; }
+  .rev-card .rev-total {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 2px solid var(--gs-900);
+    font-weight: 800; font-size: 28px; color: var(--primary);
+  }
+
+  /* A/B */
+  .ab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+  .ab-card {
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 22px; background: #FFFFFF;
+  }
+  .ab-card.winner {
+    border-color: var(--primary); background: var(--primary-soft);
+    box-shadow: 0 4px 16px rgba(11,47,172,0.10);
+  }
+  .ab-card-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px;
+  }
+  .ab-variant { font-weight: 800; font-size: 20px; color: var(--gs-900); }
+  .ab-variant em {
+    font-style: normal; color: var(--text-dim); font-size: 13px;
+    margin-left: 10px; font-weight: 600;
+  }
+  .ab-badge {
+    font-size: 11px; padding: 5px 12px; border-radius: 4px;
+    background: var(--gs-100); color: var(--text-dim);
+    letter-spacing: 0.08em; font-weight: 700;
+  }
+  .ab-card.winner .ab-badge { background: var(--primary); color: #FFFFFF; }
+  .ab-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+  .ab-metric-label {
+    font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 4px; font-weight: 700;
+  }
+  .ab-metric-val { font-weight: 800; font-size: 20px; color: var(--gs-900); }
+  .ab-delta {
+    margin-top: 18px; padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-dim); font-weight: 600;
+  }
+  .ab-delta strong { color: var(--primary); font-weight: 800; }
+
+  /* ============ COMPARISON-SPECIFIC ============ */
+  .yoy-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;
+    margin-bottom: 36px;
+  }
+  .yoy-card {
+    background: #FFFFFF; border: 1px solid var(--border);
+    border-radius: 8px; padding: 22px;
+    position: relative; overflow: hidden;
+  }
+  .yoy-card .yoy-label {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 14px; font-weight: 700;
+  }
+  .yoy-year-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .yoy-year-row .yr {
+    font-size: 11px; color: var(--text-faint); font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .yoy-year-row .val {
+    font-weight: 800; font-size: 22px; color: var(--gs-900);
+  }
+  .yoy-year-row.current .val { color: var(--primary); font-size: 26px; }
+  .yoy-delta {
+    margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 700;
+  }
+  .yoy-delta .arrow {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 4px;
+    font-size: 14px;
+  }
+  .yoy-delta.up { color: var(--positive); }
+  .yoy-delta.up .arrow { background: var(--positive-soft); }
+  .yoy-delta.down { color: var(--negative); }
+  .yoy-delta.down .arrow { background: var(--negative-soft); }
+  .yoy-delta.flat { color: var(--text-dim); }
+  .yoy-delta.flat .arrow { background: var(--gs-100); }
+
+  /* Comparison table */
+  .cmp-table {
+    background: #FFFFFF; border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+  }
+  .cmp-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .cmp-table thead th {
+    background: var(--bg-tint); color: var(--gs-900);
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 700; padding: 12px 14px;
+    border-bottom: 2px solid var(--border-strong);
+    text-align: right;
+  }
+  .cmp-table thead th:first-child,
+  .cmp-table thead th:nth-child(2) { text-align: left; }
+  .cmp-table tbody td {
+    padding: 12px 14px; border-bottom: 1px solid var(--border);
+    color: var(--gs-900); font-weight: 600; text-align: right;
+  }
+  .cmp-table tbody td:first-child,
+  .cmp-table tbody td:nth-child(2) { text-align: left; }
+  .cmp-table tbody tr:hover { background: var(--bg-tint); }
+  .cmp-table tbody tr:last-child td { border-bottom: none; }
+  .cmp-table tbody tr.subtotal {
+    background: var(--gs-50);
+    font-weight: 800;
+  }
+  .cmp-table tbody tr.subtotal td { font-weight: 800; }
+
+  .delta-pill {
+    display: inline-block; padding: 3px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 700;
+  }
+  .delta-pill.up { background: var(--positive-soft); color: var(--positive); }
+  .delta-pill.down { background: var(--negative-soft); color: var(--negative); }
+  .delta-pill.flat { background: var(--gs-100); color: var(--text-dim); }
+
+  /* Methodology note */
+  .note-banner {
+    background: linear-gradient(135deg, var(--primary-soft) 0%, rgba(11,47,172,0.02) 100%);
+    border: 1px solid var(--gs-200);
+    border-left: 4px solid var(--primary);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .note-banner .icon {
+    font-size: 20px; line-height: 1;
+  }
+  .note-banner .text {
+    font-size: 13px; color: var(--gs-900); line-height: 1.6;
+  }
+  .note-banner .text strong { color: var(--primary); }
+
+  .empty {
+    padding: 40px; text-align: center; color: var(--text-faint);
+    font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .footer {
+    margin-top: 60px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--text-dim); letter-spacing: 0.05em;
+    display: flex; justify-content: space-between; font-weight: 600;
+  }
+
+  @media (max-width: 1100px) {
+    .grid-2, .ab-grid { grid-template-columns: 1fr; }
+    .kpi-row, .yoy-grid { grid-template-columns: repeat(2, 1fr); }
+    .rev-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ============ PASSWORD GATE ============ */
+  #gate {
+    position: fixed; inset: 0;
+    background: #FFFFFF;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(11,47,172,0.08), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(11,47,172,0.05), transparent 60%);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  body.unlocked #gate { display: none; }
+  body:not(.unlocked) #app { display: none; }
+  .gate-card {
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px 44px;
+    width: 100%; max-width: 440px;
+    box-shadow: 0 12px 48px rgba(11,47,172,0.10);
+    text-align: center;
+  }
+  .gate-eyebrow {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--primary); font-weight: 700;
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-bottom: 18px;
+  }
+  .gate-eyebrow::before {
+    content: ''; width: 8px; height: 8px; background: var(--primary); border-radius: 50%;
+  }
+  .gate-card h1 {
+    font-weight: 800; font-size: 32px; letter-spacing: -0.02em;
+    color: var(--gs-900); margin-bottom: 8px; line-height: 1.1;
+  }
+  .gate-card h1 span { color: var(--primary); }
+  .gate-card .sub {
+    color: var(--text-dim); font-size: 14px; font-weight: 600;
+    margin-bottom: 32px;
+  }
+  .gate-form { display: flex; flex-direction: column; gap: 12px; }
+  .gate-input {
+    width: 100%; padding: 14px 16px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 8px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 15px; font-weight: 600;
+    color: var(--gs-900);
+    background: var(--bg-tint);
+    transition: all 0.18s;
+    outline: none;
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+  .gate-input::placeholder { color: var(--text-faint); font-weight: 500; }
+  .gate-input:focus {
+    border-color: var(--primary);
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(11,47,172,0.10);
+  }
+  .gate-input.error {
+    border-color: var(--negative);
+    background: var(--negative-soft);
+    animation: shake 0.4s;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+  .gate-btn {
+    width: 100%; padding: 14px;
+    background: var(--primary); color: #FFFFFF;
+    border: none; border-radius: 8px;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 15px; font-weight: 700;
+    cursor: pointer; transition: all 0.18s;
+    letter-spacing: 0.02em;
+  }
+  .gate-btn:hover { background: var(--gs-600); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11,47,172,0.30); }
+  .gate-btn:active { transform: translateY(0); }
+  .gate-error {
+    color: var(--negative); font-size: 13px; font-weight: 700;
+    margin-top: 4px; min-height: 18px;
+  }
+  .gate-footer {
+    margin-top: 28px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-faint); letter-spacing: 0.08em;
+    text-transform: uppercase; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ PASSWORD GATE ============ -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-eyebrow">Restricted access</div>
+    <h1>Campaign <span>dashboard</span></h1>
+    <div class="sub">Introduce la contraseña para acceder</div>
+    <form class="gate-form" id="gateForm" autocomplete="off">
+      <input
+        type="password"
+        id="gatePassword"
+        class="gate-input"
+        placeholder="Contraseña"
+        autocomplete="off"
+        spellcheck="false"
+        autofocus />
+      <div class="gate-error" id="gateError">&nbsp;</div>
+      <button type="submit" class="gate-btn">Acceder</button>
+    </form>
+    <div class="gate-footer">Exam Prep 2026 · Internal</div>
+  </div>
+</div>
+
+<!-- ============ MAIN APP ============ -->
+<div id="app">
+
+<header class="header">
+  <div class="header-left">
+    <div class="eyebrow">Exam Prep Campaign · Multi-Year View</div>
+    <h1>Campaign <span>performance</span></h1>
+    <div class="header-sub">ES · FR · IT  ·  TrustProgram · Highlighted Ad · Ad Boost  ·  2024 → 2026</div>
+  </div>
+  <div class="header-right">
+    <div class="live">Data synced</div>
+    <div>v2.1 · refreshed data</div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" data-tab="t2026">2026 results <span class="badge">current</span></button>
+  <button class="tab" data-tab="t2024vs2026">2024 vs 2026 <span class="badge">YoY</span></button>
+  <button class="tab" data-tab="t2025vs2026">2025 vs 2026 <span class="badge">YoY</span></button>
+</div>
+
+<!-- ========================= TAB 1: 2026 RESULTS ========================= -->
+<div class="tab-panel active" id="t2026">
+
+  <div class="filters">
+    <div class="filter-group">
+      <span class="filter-label">Market</span>
+      <div class="pill-group" data-filter="market2026">
+        <button class="pill active" data-val="ALL">All</button>
+        <button class="pill" data-val="ES">🇪🇸 ES</button>
+        <button class="pill" data-val="FR">🇫🇷 FR</button>
+        <button class="pill" data-val="IT">🇮🇹 IT</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Product</span>
+      <div class="pill-group" data-filter="product2026">
+        <button class="pill active" data-val="ALL">All</button>
+        <button class="pill" data-val="TrustProgram">TrustProgram</button>
+        <button class="pill" data-val="Highlighted Ad">Highlighted Ad</button>
+        <button class="pill" data-val="Ad Boost">Ad Boost</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>Engagement <span>funnel</span></h2>
+      <div class="meta" id="funnelMeta">— scope</div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Volume drop-off <span class="tag">Live</span></div>
+        <div class="funnel" id="funnel"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Rate metrics</div>
+        <div class="chart-wrap"><canvas id="rateChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>Country &amp; product <span>breakdown</span></h2>
+      <div class="meta">cross-cut analysis</div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Conversions by market</div>
+        <div class="chart-wrap"><canvas id="countryChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Performance by product layer</div>
+        <div class="chart-wrap"><canvas id="productChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>Email-level <span>detail</span></h2>
+      <div class="meta">from email_performance</div>
+    </div>
+    <div class="table-wrap">
+      <table id="emailTable">
+        <thead>
+          <tr>
+            <th>Country</th><th>Layer</th><th>Email</th>
+            <th>Sent</th><th>Open %</th><th>Human OR</th>
+            <th>Click %</th><th>CTOR</th><th>Conv.</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>Uplift &amp; <span>revenue</span></h2>
+      <div class="meta">target vs control</div>
+    </div>
+    <div class="rev-grid" id="revGrid"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>A/B test <span>analysis</span> — Email 2</h2>
+      <div class="meta">A: 48h delay · B: 96h delay</div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Variant A vs B — conversion rate per segment</div>
+      <div class="chart-wrap tall"><canvas id="abChart"></canvas></div>
+      <div class="ab-grid" id="abGrid"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ========================= TAB 2: 2024 vs 2026 ========================= -->
+<div class="tab-panel" id="t2024vs2026">
+
+  <div class="note-banner">
+    <div class="icon">ℹ️</div>
+    <div class="text">
+      <strong>Comparison methodology:</strong> 2024 ran via Promo_messaging + Acumba in Spanish admin tool (initial send + Última Oportunidad reimpacto). 2026 runs via Customer.io with Email 1 + Email 2 (A/B). Products mapped: PDC/Verificado → TrustProgram · Destacado → Highlighted Ad · Pack Subir → Ad Boost.
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <span class="filter-label">Market</span>
+      <div class="pill-group" data-filter="market24">
+        <button class="pill active" data-val="ALL">All</button>
+        <button class="pill" data-val="ES">🇪🇸 ES</button>
+        <button class="pill" data-val="FR">🇫🇷 FR</button>
+        <button class="pill" data-val="IT">🇮🇹 IT</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Product</span>
+      <div class="pill-group" data-filter="product24">
+        <button class="pill active" data-val="ALL">All</button>
+        <button class="pill" data-val="TrustProgram">TrustProgram</button>
+        <button class="pill" data-val="Highlighted Ad">Highlighted Ad</button>
+        <button class="pill" data-val="Ad Boost">Ad Boost</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="yoy-grid" id="yoy24Grid"></div>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>Rate comparison <span>2024 vs 2026</span></h2>
+      <div class="meta">all rates side by side</div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Open / Click / Purchase rates</div>
+        <div class="chart-wrap"><canvas id="cmp24RatesChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Revenue by market</div>
+        <div class="chart-wrap"><canvas id="cmp24RevChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>Detailed <span>breakdown</span></h2>
+      <div class="meta">per market × product</div>
+    </div>
+    <div class="cmp-table">
+      <table id="cmp24Table">
+        <thead>
+          <tr>
+            <th>Market</th><th>Product</th>
+            <th>Sent 2024</th><th>Sent 2026</th><th>Δ</th>
+            <th>OR 2024</th><th>OR 2026</th><th>Δ</th>
+            <th>Conv. 2024</th><th>Conv. 2026</th>
+            <th>Rev. 2024</th><th>Rev. 2026</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ========================= TAB 3: 2025 vs 2026 ========================= -->
+<div class="tab-panel" id="t2025vs2026">
+
+  <div class="note-banner">
+    <div class="icon">ℹ️</div>
+    <div class="text">
+      <strong>Comparison methodology:</strong> 2025 used segmentation by current product ownership (e.g. "Con Verificado" → sells Destacado) with discount-based reimpactos (10-20% off). Products mapped by the product being SOLD: _VERIFICADO → TrustProgram · _DESTACADO → Highlighted Ad · _SUBIRES → Ad Boost.
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <span class="filter-label">Market</span>
+      <div class="pill-group" data-filter="market25">
+        <button class="pill active" data-val="ALL">All</button>
+        <button class="pill" data-val="ES">🇪🇸 ES</button>
+        <button class="pill" data-val="FR">🇫🇷 FR</button>
+        <button class="pill" data-val="IT">🇮🇹 IT</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Product</span>
+      <div class="pill-group" data-filter="product25">
+        <button class="pill active" data-val="ALL">All</button>
+        <button class="pill" data-val="TrustProgram">TrustProgram</button>
+        <button class="pill" data-val="Highlighted Ad">Highlighted Ad</button>
+        <button class="pill" data-val="Ad Boost">Ad Boost</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="yoy-grid" id="yoy25Grid"></div>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>Rate comparison <span>2025 vs 2026</span></h2>
+      <div class="meta">all rates side by side</div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">Open / Click / Purchase rates</div>
+        <div class="chart-wrap"><canvas id="cmp25RatesChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Revenue by market</div>
+        <div class="chart-wrap"><canvas id="cmp25RevChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>Detailed <span>breakdown</span></h2>
+      <div class="meta">per market × product</div>
+    </div>
+    <div class="cmp-table">
+      <table id="cmp25Table">
+        <thead>
+          <tr>
+            <th>Market</th><th>Product</th>
+            <th>Sent 2025</th><th>Sent 2026</th><th>Δ</th>
+            <th>OR 2025</th><th>OR 2026</th><th>Δ</th>
+            <th>Conv. 2025</th><th>Conv. 2026</th>
+            <th>Rev. 2025</th><th>Rev. 2026</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<div class="footer">
+  <span>Exam Prep · Multi-Year Dashboard</span>
+  <span id="filterStateText">Scope: all markets · all products</span>
+</div>
+
+</div><!-- /#app -->
+
+<script>
+/* ================================================================
+   PASSWORD GATE
+   ================================================================ */
+// SHA-256 hash of "promo_TM26" — actual password not stored in plain text
+const PASS_HASH = '6a7fdda1abc09c8858e8c4f58e3348002e67acbacb673798296aa367444f2911';
+const STORAGE_KEY = 'examPrep2026_authenticated';
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function unlock() {
+  document.body.classList.add('unlocked');
+  try { sessionStorage.setItem(STORAGE_KEY, '1'); } catch(e) {}
+  // The main script always runs setupTabs/setupFilters at load (they're idempotent
+  // to define but attach listeners, so we don't re-call them). We only need to
+  // render now that the dashboard is visible.
+  if (typeof renderAll === 'function') {
+    renderAll();
+  }
+}
+
+// Check if already authenticated this session
+try {
+  if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+    document.body.classList.add('unlocked');
+  }
+} catch(e) {}
+
+document.getElementById('gateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const input = document.getElementById('gatePassword');
+  const err = document.getElementById('gateError');
+  const value = input.value;
+  const hash = await sha256(value);
+  if (hash === PASS_HASH) {
+    err.innerHTML = '&nbsp;';
+    input.classList.remove('error');
+    unlock();
+  } else {
+    err.textContent = 'Contraseña incorrecta';
+    input.classList.add('error');
+    input.value = '';
+    setTimeout(() => input.classList.remove('error'), 500);
+    input.focus();
+  }
+});
+</script>
+
+<script>
+/* ================================================================
+   DATA
+   ================================================================ */
+
+// ---------- 2026 EMAIL-LEVEL (refreshed from updated Email_Performance) ----------
+const data2026 = [
+  // ES
+  {c:'ES', l:'TrustProgram',   e:'Email 1', b:'-', sent:136068, del:135303, opn:40794, hopn:15099, clk:664, hclk:640, cvt:49, dlv:99.4, or_:30.0, hor:11.1, ctr:0.5, ctor:1.6},
+  {c:'ES', l:'TrustProgram',   e:'Email 2', b:'A', sent:65728,  del:65362,  opn:26829, hopn:15182, clk:724, hclk:695, cvt:35, dlv:99.4, or_:40.8, hor:23.1, ctr:1.1, ctor:2.7},
+  {c:'ES', l:'TrustProgram',   e:'Email 2', b:'B', sent:65726,  del:65342,  opn:33106, hopn:16772, clk:676, hclk:640, cvt:18, dlv:99.4, or_:50.4, hor:25.5, ctr:1.0, ctor:2.0},
+  {c:'ES', l:'Highlighted Ad', e:'Email 1', b:'-', sent:4184,   del:4157,   opn:1535,  hopn:857,   clk:56,  hclk:55,  cvt:7,  dlv:99.4, or_:36.7, hor:20.5, ctr:1.3, ctor:3.6},
+  {c:'ES', l:'Highlighted Ad', e:'Email 2', b:'A', sent:2056,   del:2043,   opn:740,   hopn:431,   clk:30,  hclk:27,  cvt:10, dlv:99.4, or_:36.0, hor:21.0, ctr:1.5, ctor:4.1},
+  {c:'ES', l:'Highlighted Ad', e:'Email 2', b:'B', sent:1984,   del:1974,   opn:724,   hopn:382,   clk:13,  hclk:13,  cvt:1,  dlv:99.5, or_:36.5, hor:19.3, ctr:0.7, ctor:1.8},
+  {c:'ES', l:'Ad Boost',       e:'Email 1', b:'-', sent:244,    del:240,    opn:104,   hopn:79,    clk:8,   hclk:8,   cvt:1,  dlv:98.4, or_:42.6, hor:32.4, ctr:3.3, ctor:7.7},
+  {c:'ES', l:'Ad Boost',       e:'Email 2', b:'A', sent:122,    del:120,    opn:48,    hopn:36,    clk:6,   hclk:6,   cvt:0,  dlv:98.4, or_:39.3, hor:29.5, ctr:4.9, ctor:12.5},
+  {c:'ES', l:'Ad Boost',       e:'Email 2', b:'B', sent:107,    del:106,    opn:40,    hopn:31,    clk:1,   hclk:1,   cvt:0,  dlv:99.1, or_:37.4, hor:29.0, ctr:0.9, ctor:2.5},
+  {c:'ES', l:'Ad Boost',       e:'Email 3', b:'A', sent:122,    del:120,    opn:46,    hopn:34,    clk:2,   hclk:1,   cvt:0,  dlv:98.4, or_:37.7, hor:27.9, ctr:1.6, ctor:4.3},
+  {c:'ES', l:'Ad Boost',       e:'Email 3', b:'B', sent:105,    del:104,    opn:42,    hopn:35,    clk:2,   hclk:2,   cvt:1,  dlv:99.0, or_:40.0, hor:33.3, ctr:1.9, ctor:4.8},
+  // FR
+  {c:'FR', l:'TrustProgram',   e:'Email 1', b:'-', sent:76897,  del:76646,  opn:25158, hopn:9331,  clk:560, hclk:538, cvt:26, dlv:99.7, or_:32.7, hor:12.1, ctr:0.7, ctor:2.2},
+  {c:'FR', l:'TrustProgram',   e:'Email 2', b:'A', sent:37142,  del:37024,  opn:16713, hopn:8650,  clk:446, hclk:424, cvt:13, dlv:99.7, or_:45.0, hor:23.3, ctr:1.2, ctor:2.7},
+  {c:'FR', l:'TrustProgram',   e:'Email 2', b:'B', sent:37103,  del:36985,  opn:20107, hopn:9930,  clk:416, hclk:398, cvt:8,  dlv:99.7, or_:54.2, hor:26.8, ctr:1.1, ctor:2.1},
+  {c:'FR', l:'Highlighted Ad', e:'Email 1', b:'-', sent:1630,   del:1625,   opn:624,   hopn:361,   clk:22,  hclk:22,  cvt:2,  dlv:99.7, or_:38.3, hor:22.1, ctr:1.3, ctor:3.5},
+  {c:'FR', l:'Highlighted Ad', e:'Email 2', b:'A', sent:790,    del:789,    opn:298,   hopn:173,   clk:12,  hclk:12,  cvt:3,  dlv:99.9, or_:37.7, hor:21.9, ctr:1.5, ctor:4.0},
+  {c:'FR', l:'Highlighted Ad', e:'Email 2', b:'B', sent:774,    del:771,    opn:299,   hopn:161,   clk:10,  hclk:9,   cvt:1,  dlv:99.6, or_:38.6, hor:20.8, ctr:1.3, ctor:3.3},
+  {c:'FR', l:'Ad Boost',       e:'Email 1', b:'-', sent:69,     del:69,     opn:29,    hopn:20,    clk:3,   hclk:2,   cvt:2,  dlv:100,  or_:42.0, hor:29.0, ctr:4.3, ctor:10.3},
+  {c:'FR', l:'Ad Boost',       e:'Email 2', b:'A', sent:32,     del:32,     opn:11,    hopn:5,     clk:1,   hclk:1,   cvt:0,  dlv:100,  or_:34.4, hor:15.6, ctr:3.1, ctor:9.1},
+  {c:'FR', l:'Ad Boost',       e:'Email 2', b:'B', sent:33,     del:33,     opn:6,     hopn:2,     clk:1,   hclk:1,   cvt:0,  dlv:100,  or_:18.2, hor:6.1,  ctr:3.0, ctor:16.7},
+  {c:'FR', l:'Ad Boost',       e:'Email 3', b:'A', sent:32,     del:32,     opn:16,    hopn:9,     clk:1,   hclk:1,   cvt:0,  dlv:100,  or_:50.0, hor:28.1, ctr:3.1, ctor:6.3},
+  {c:'FR', l:'Ad Boost',       e:'Email 3', b:'B', sent:33,     del:33,     opn:17,    hopn:12,    clk:2,   hclk:2,   cvt:0,  dlv:100,  or_:51.5, hor:36.4, ctr:6.1, ctor:11.8},
+  // IT (Email 1 only — Email 2/3 not yet sent)
+  {c:'IT', l:'TrustProgram',   e:'Email 1', b:'-', sent:91865, del:91550, opn:50473, hopn:25905, clk:559, hclk:538, cvt:44, dlv:99.7, or_:54.9, hor:28.2, ctr:0.6, ctor:1.1},
+  {c:'IT', l:'TrustProgram',   e:'Email 2', b:'A', sent:0, del:0, opn:0, hopn:0, clk:0, hclk:0, cvt:0, dlv:0, or_:0, hor:0, ctr:0, ctor:0},
+  {c:'IT', l:'TrustProgram',   e:'Email 2', b:'B', sent:0, del:0, opn:0, hopn:0, clk:0, hclk:0, cvt:0, dlv:0, or_:0, hor:0, ctr:0, ctor:0},
+  {c:'IT', l:'Highlighted Ad', e:'Email 1', b:'-', sent:4320, del:4304, opn:2184, hopn:1366, clk:67, hclk:65, cvt:8, dlv:99.6, or_:50.6, hor:31.6, ctr:1.6, ctor:3.1},
+  {c:'IT', l:'Highlighted Ad', e:'Email 2', b:'A', sent:0, del:0, opn:0, hopn:0, clk:0, hclk:0, cvt:0, dlv:0, or_:0, hor:0, ctr:0, ctor:0},
+  {c:'IT', l:'Highlighted Ad', e:'Email 2', b:'B', sent:0, del:0, opn:0, hopn:0, clk:0, hclk:0, cvt:0, dlv:0, or_:0, hor:0, ctr:0, ctor:0},
+  {c:'IT', l:'Ad Boost',       e:'Email 1', b:'-', sent:213, del:213, opn:84, hopn:54, clk:12, hclk:11, cvt:1, dlv:100, or_:39.4, hor:25.4, ctr:5.6, ctor:14.3},
+  {c:'IT', l:'Ad Boost',       e:'Email 2', b:'A', sent:0, del:0, opn:0, hopn:0, clk:0, hclk:0, cvt:0, dlv:0, or_:0, hor:0, ctr:0, ctor:0},
+  {c:'IT', l:'Ad Boost',       e:'Email 2', b:'B', sent:0, del:0, opn:0, hopn:0, clk:0, hclk:0, cvt:0, dlv:0, or_:0, hor:0, ctr:0, ctor:0},
+  {c:'IT', l:'Ad Boost',       e:'Email 3', b:'A', sent:0, del:0, opn:0, hopn:0, clk:0, hclk:0, cvt:0, dlv:0, or_:0, hor:0, ctr:0, ctor:0},
+  {c:'IT', l:'Ad Boost',       e:'Email 3', b:'B', sent:0, del:0, opn:0, hopn:0, clk:0, hclk:0, cvt:0, dlv:0, or_:0, hor:0, ctr:0, ctor:0},
+];
+
+const upliftData = [
+  {c:'ES', l:'TrustProgram',   tgt:137683, tgtCvt:106, ctrl:7227, ctrlCvt:2, price:14.90, rev:1011.67},
+  {c:'ES', l:'Highlighted Ad', tgt:141725, tgtCvt:36,  ctrl:7427, ctrlCvt:1, price:12.90, rev:218},
+  {c:'ES', l:'Ad Boost',       tgt:138536, tgtCvt:19,  ctrl:7277, ctrlCvt:1, price:3.95,  rev:0},
+  {c:'FR', l:'TrustProgram',   tgt:76881,  tgtCvt:56,  ctrl:3904, ctrlCvt:2, price:8.89,  rev:148},
+  {c:'FR', l:'Highlighted Ad', tgt:78422,  tgtCvt:8,   ctrl:3976, ctrlCvt:0, price:9.95,  rev:80},
+  {c:'FR', l:'Ad Boost',       tgt:78130,  tgtCvt:7,   ctrl:3957, ctrlCvt:0, price:1.90,  rev:13},
+  {c:'IT', l:'TrustProgram',   tgt:92548,  tgtCvt:66,  ctrl:4814, ctrlCvt:0, price:7.90,  rev:521},
+  {c:'IT', l:'Highlighted Ad', tgt:96772,  tgtCvt:10,  ctrl:5017, ctrlCvt:0, price:12.00, rev:120},
+  {c:'IT', l:'Ad Boost',       tgt:95646,  tgtCvt:6,   ctrl:4972, ctrlCvt:0, price:3.90,  rev:23},
+];
+
+// ---------- 2024 AGGREGATED PER MARKET × PRODUCT ----------
+const data2024 = [
+  // ES
+  {c:'ES', l:'TrustProgram',   sent:130361, opn:19738, clk:760, cvt:233, rev:1141.70},
+  {c:'ES', l:'Highlighted Ad', sent:16054,  opn:5811,  clk:250, cvt:79,  rev:782.10},
+  {c:'ES', l:'Ad Boost',       sent:2679,   opn:1484,  clk:170, cvt:92,  rev:910.80},
+  // FR
+  {c:'FR', l:'TrustProgram',   sent:52797,  opn:4522,  clk:114, cvt:28,  rev:249.20},
+  {c:'FR', l:'Highlighted Ad', sent:4809,   opn:1922,  clk:32,  cvt:19,  rev:189.05},
+  {c:'FR', l:'Ad Boost',       sent:228,    opn:121,   clk:10,  cvt:5,   rev:45.70},
+  // IT
+  {c:'IT', l:'TrustProgram',   sent:42959,  opn:8441,  clk:121, cvt:12,  rev:94.80},
+  {c:'IT', l:'Highlighted Ad', sent:7725,   opn:3534,  clk:151, cvt:36,  rev:397.15},
+  {c:'IT', l:'Ad Boost',       sent:777,    opn:513,   clk:46,  cvt:13,  rev:167.70},
+];
+
+// ---------- 2025 AGGREGATED PER MARKET × PRODUCT ----------
+const data2025 = [
+  // ES
+  {c:'ES', l:'TrustProgram',   sent:3702,   opn:488,   clk:57,  cvt:4,   rev:53.60},
+  {c:'ES', l:'Highlighted Ad', sent:277897, opn:22960, clk:994, cvt:16,  rev:195.02},
+  {c:'ES', l:'Ad Boost',       sent:689,    opn:321,   clk:29,  cvt:2,   rev:24.25},
+  // FR
+  {c:'FR', l:'TrustProgram',   sent:388,    opn:36,    clk:5,   cvt:0,   rev:0},
+  {c:'FR', l:'Highlighted Ad', sent:105255, opn:5675,  clk:77,  cvt:6,   rev:55.72},
+  {c:'FR', l:'Ad Boost',       sent:80,     opn:28,    clk:3,   cvt:0,   rev:0},
+  // IT
+  {c:'IT', l:'TrustProgram',   sent:443,    opn:105,   clk:8,   cvt:0,   rev:0},
+  {c:'IT', l:'Highlighted Ad', sent:110395, opn:11251, clk:329, cvt:17,  rev:165.63},
+  {c:'IT', l:'Ad Boost',       sent:607,    opn:340,   clk:64,  cvt:10,  rev:124.35},
+];
+
+/* ================================================================
+   STATE
+   ================================================================ */
+const filters = {
+  '2026':  { market: 'ALL', product: 'ALL' },
+  '24':    { market: 'ALL', product: 'ALL' },
+  '25':    { market: 'ALL', product: 'ALL' },
+};
+
+/* ================================================================
+   HELPERS
+   ================================================================ */
+const fmt = (n) => {
+  if (n === 0 || n) return new Intl.NumberFormat('de-DE').format(Math.round(n));
+  return '—';
+};
+const fmtPct = (n, decimals=1) => isFinite(n) ? n.toFixed(decimals).replace('.', ',') + '%' : '—';
+const fmtMoney = (n) => new Intl.NumberFormat('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0}).format(n) + ' €';
+
+function aggRows(rows) {
+  const a = { sent:0, del:0, opn:0, hopn:0, clk:0, hclk:0, cvt:0, rev:0 };
+  rows.forEach(r => {
+    a.sent+=r.sent||0; a.del+=r.del||r.sent||0; a.opn+=r.opn||0;
+    a.hopn+=r.hopn||0; a.clk+=r.clk||0; a.hclk+=r.hclk||0;
+    a.cvt+=r.cvt||0; a.rev+=r.rev||0;
+  });
+  a.openRate    = a.del ? a.opn/a.del*100 : 0;
+  a.humanOR     = a.del ? a.hopn/a.del*100 : 0;
+  a.clickRate   = a.del ? a.clk/a.del*100 : 0;
+  a.ctor        = a.opn ? a.clk/a.opn*100 : 0;
+  a.convRate    = a.del ? a.cvt/a.del*100 : 0;
+  a.purchaseRate= a.clk ? a.cvt/a.clk*100 : 0;
+  return a;
+}
+function filterRows(rows, m, p) {
+  return rows.filter(r => (m==='ALL'||r.c===m) && (p==='ALL'||r.l===p));
+}
+function deltaPct(curr, prev) {
+  if (!prev) return null;
+  return (curr - prev) / prev * 100;
+}
+function deltaTag(curr, prev) {
+  const d = deltaPct(curr, prev);
+  if (d === null) return `<span class="delta-pill flat">n/a</span>`;
+  if (Math.abs(d) < 0.5) return `<span class="delta-pill flat">~0%</span>`;
+  const cls = d > 0 ? 'up' : 'down';
+  const sign = d > 0 ? '+' : '';
+  return `<span class="delta-pill ${cls}">${sign}${d.toFixed(0)}%</span>`;
+}
+
+/* ================================================================
+   TAB 1 — 2026 RESULTS (same as v1)
+   ================================================================ */
+let charts = {};
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+const baseOpts = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: {
+    legend: { labels: { color: '#020B23', font: { family: 'Open Sans', size: 11, weight: '600' }, boxWidth: 12 } },
+    tooltip: {
+      backgroundColor: '#020B23', borderColor: '#0B2FAC', borderWidth: 1,
+      titleColor: '#FFFFFF', bodyColor: '#FFFFFF',
+      titleFont: { family: 'Open Sans', size: 12, weight: '700' },
+      bodyFont: { family: 'Open Sans', size: 12, weight: '600' },
+      padding: 12,
+    }
+  },
+  scales: {
+    x: { ticks: { color: '#6B7A99', font: { family: 'Open Sans', size: 11, weight: '600' } },
+         grid: { color: 'rgba(11,47,172,0.05)' } },
+    y: { ticks: { color: '#6B7A99', font: { family: 'Open Sans', size: 11, weight: '600' } },
+         grid: { color: 'rgba(11,47,172,0.05)' }, beginAtZero: true },
+  }
+};
+
+function render2026() {
+  const f = filters['2026'];
+  const rows = filterRows(data2026, f.market, f.product);
+  const a = aggRows(rows);
+  const upl = filterRows(upliftData, f.market, f.product);
+  const totalRev = upl.reduce((s,r)=>s+r.rev,0);
+  const incremental = upl.reduce((s,r)=>{
+    const tgtRate = r.tgt ? r.tgtCvt/r.tgt : 0;
+    const ctrlRate = r.ctrl ? r.ctrlCvt/r.ctrl : 0;
+    return s + Math.max(0,(tgtRate - ctrlRate) * r.tgt);
+  }, 0);
+
+  // KPI
+  const kpis = [
+    { label: 'Emails sent',     val: fmt(a.sent), bar: 100 },
+    { label: 'Open rate',       val: fmtPct(a.openRate),  sub: 'Human OR ' + fmtPct(a.humanOR), bar: a.openRate },
+    { label: 'Click rate',      val: fmtPct(a.clickRate, 2), sub: 'CTOR ' + fmtPct(a.ctor), bar: a.clickRate*20 },
+    { label: 'Conversions',     val: fmt(a.cvt), sub: 'Conv rate ' + fmtPct(a.convRate, 3), accent:true, bar: Math.min(100, a.convRate*1000) },
+    { label: 'Revenue impact',  val: fmtMoney(totalRev), sub: '~' + fmt(incremental) + ' incremental conv.', accent:true, bar: 100 },
+  ];
+  document.getElementById('kpiRow').innerHTML = kpis.map(k => `
+    <div class="kpi ${k.accent?'accent':''}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.val}</div>
+      ${k.sub ? `<div class="kpi-sub">${k.sub}</div>` : ''}
+      <div class="kpi-bar" style="width:${Math.min(100,k.bar||0)}%"></div>
+    </div>`).join('');
+
+  // Funnel
+  document.getElementById('funnelMeta').textContent = `${f.market} · ${f.product}`;
+  const steps = [
+    { label: 'Sent',         val: a.sent,  pct: 100 },
+    { label: 'Delivered',    val: a.del,   pct: a.sent? a.del/a.sent*100 : 0 },
+    { label: 'Opened',       val: a.opn,   pct: a.sent? a.opn/a.sent*100 : 0 },
+    { label: 'Human opened', val: a.hopn,  pct: a.sent? a.hopn/a.sent*100 : 0 },
+    { label: 'Clicked',      val: a.clk,   pct: a.sent? a.clk/a.sent*100 : 0 },
+    { label: 'Converted',    val: a.cvt,   pct: a.sent? a.cvt/a.sent*100 : 0 },
+  ];
+  document.getElementById('funnel').innerHTML = steps.map(s => `
+    <div class="funnel-step">
+      <div class="funnel-label">${s.label}</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${s.pct}%"></div></div>
+      <div class="funnel-value">${fmt(s.val)}<span class="pct">${fmtPct(s.pct, 2)}</span></div>
+    </div>`).join('');
+
+  // Rate chart
+  destroyChart('rate');
+  charts.rate = new Chart(document.getElementById('rateChart'), {
+    type: 'bar',
+    data: {
+      labels: ['Open rate','Human OR','Click rate','CTOR','Conv rate'],
+      datasets: [{
+        data: [a.openRate, a.humanOR, a.clickRate, a.ctor, a.convRate],
+        backgroundColor: ['#0B2FAC','#3C69BD','#6B86CC','#9DACDE','#041365'],
+        borderRadius: 4, barThickness: 28,
+      }]
+    },
+    options: { ...baseOpts, plugins: { ...baseOpts.plugins, legend: { display: false },
+      tooltip: { ...baseOpts.plugins.tooltip, callbacks: { label: c => c.parsed.y.toFixed(2).replace('.', ',') + '%' } } } }
+  });
+
+  // Country chart
+  destroyChart('country');
+  const cs = ['ES','FR','IT'];
+  const sent = cs.map(c => filterRows(data2026, c, f.product).reduce((s,r)=>s+r.sent,0));
+  const cvt  = cs.map(c => filterRows(data2026, c, f.product).reduce((s,r)=>s+r.cvt,0));
+  charts.country = new Chart(document.getElementById('countryChart'), {
+    type: 'bar',
+    data: {
+      labels: cs,
+      datasets: [
+        { label: 'Sent (k)', data: sent.map(v=>v/1000), backgroundColor: '#E3E8F0', yAxisID:'y', borderRadius:4, barThickness:38 },
+        { label: 'Conversions', data: cvt, backgroundColor: ['#0B2FAC','#3C69BD','#9DACDE'], yAxisID:'y1', borderRadius:4, barThickness:38 },
+      ]
+    },
+    options: { ...baseOpts, scales: {
+      x: baseOpts.scales.x,
+      y:  { ...baseOpts.scales.y, position:'left',  title:{display:true,text:'Sent (k)',color:'#6B7A99',font:{family:'Open Sans',size:10,weight:'700'}}},
+      y1: { ...baseOpts.scales.y, position:'right', grid:{drawOnChartArea:false}, title:{display:true,text:'Conversions',color:'#6B7A99',font:{family:'Open Sans',size:10,weight:'700'}}},
+    }}
+  });
+
+  // Product chart
+  destroyChart('product');
+  const products = ['TrustProgram','Highlighted Ad','Ad Boost'];
+  const subset = data2026.filter(r => f.market==='ALL' || r.c===f.market);
+  const pData = products.map(p => aggRows(subset.filter(r => r.l===p)).convRate);
+  charts.product = new Chart(document.getElementById('productChart'), {
+    type: 'bar',
+    data: { labels: products, datasets:[{ label:'Conv rate %', data:pData,
+      backgroundColor:['#0B2FAC','#3C69BD','#9DACDE'], borderRadius:4, barThickness:50 }]},
+    options: { ...baseOpts, plugins:{...baseOpts.plugins, legend:{display:false},
+      tooltip:{...baseOpts.plugins.tooltip, callbacks:{label:c=>c.parsed.y.toFixed(3).replace('.',',')+'% conv'}}}}
+  });
+
+  // Table
+  const visible = rows.filter(r => r.sent>0);
+  const tbody = document.querySelector('#emailTable tbody');
+  tbody.innerHTML = visible.length === 0
+    ? `<tr><td colspan="9" class="empty">No data for this selection</td></tr>`
+    : visible.map(r => `
+        <tr>
+          <td><span class="country-tag ${r.c.toLowerCase()}">${r.c}</span></td>
+          <td>${r.l}</td>
+          <td>${r.e}${r.b !== '-' ? ' · '+r.b : ''}</td>
+          <td>${fmt(r.sent)}</td>
+          <td>${fmtPct(r.or_)}</td>
+          <td>${fmtPct(r.hor)}</td>
+          <td>${fmtPct(r.ctr, 2)}</td>
+          <td>${fmtPct(r.ctor, 1)}</td>
+          <td>${fmt(r.cvt)}</td>
+        </tr>`).join('');
+
+  // Revenue cards
+  const countries = f.market==='ALL' ? ['ES','FR','IT'] : [f.market];
+  const flag = c => c==='ES'?'🇪🇸 SPAIN':c==='FR'?'🇫🇷 FRANCE':'🇮🇹 ITALY';
+  document.getElementById('revGrid').innerHTML = countries.map(c => {
+    const r = upl.filter(x => x.c === c);
+    if (!r.length) return '';
+    const totalR = r.reduce((s,x)=>s+x.rev,0);
+    const totalC = r.reduce((s,x)=>s+x.tgtCvt,0);
+    const totalCtrl = r.reduce((s,x)=>s+x.ctrlCvt,0);
+    return `<div class="rev-card ${c.toLowerCase()}">
+      <div class="rev-card-country">${flag(c)}</div>
+      <h3>Uplift impact</h3>
+      ${r.map(x => `<div class="rev-row"><span>${x.l}</span><span>${fmtMoney(x.rev)} · ${x.tgtCvt} conv.</span></div>`).join('')}
+      <div class="rev-row" style="border-top-color:var(--border-strong);margin-top:8px"><span>TARGET CONV.</span><span>${totalC}</span></div>
+      <div class="rev-row"><span>CONTROL CONV.</span><span>${totalCtrl}</span></div>
+      <div class="rev-total">${fmtMoney(totalR)}</div>
+    </div>`;
+  }).join('');
+
+  // A/B
+  const A = aggRows(rows.filter(r => r.b==='A'));
+  const B = aggRows(rows.filter(r => r.b==='B'));
+  const aWins = A.convRate > B.convRate;
+  const bWins = B.convRate > A.convRate;
+  const tie = A.convRate === B.convRate;
+  const delta = A.convRate ? (B.convRate - A.convRate)/A.convRate*100 : 0;
+  document.getElementById('abGrid').innerHTML = `
+    <div class="ab-card ${aWins?'winner':''}">
+      <div class="ab-card-head">
+        <div class="ab-variant">Variant A<em>48h delay</em></div>
+        <div class="ab-badge">${aWins?'🏆 WINNER':tie?'TIE':'Loser'}</div>
+      </div>
+      <div class="ab-metrics">
+        <div><div class="ab-metric-label">Sent</div><div class="ab-metric-val">${fmt(A.sent)}</div></div>
+        <div><div class="ab-metric-label">Conversions</div><div class="ab-metric-val">${A.cvt}</div></div>
+        <div><div class="ab-metric-label">Open rate</div><div class="ab-metric-val">${fmtPct(A.openRate)}</div></div>
+        <div><div class="ab-metric-label">Conv rate</div><div class="ab-metric-val">${fmtPct(A.convRate, 3)}</div></div>
+      </div>
+    </div>
+    <div class="ab-card ${bWins?'winner':''}">
+      <div class="ab-card-head">
+        <div class="ab-variant">Variant B<em>96h delay</em></div>
+        <div class="ab-badge">${bWins?'🏆 WINNER':tie?'TIE':'Loser'}</div>
+      </div>
+      <div class="ab-metrics">
+        <div><div class="ab-metric-label">Sent</div><div class="ab-metric-val">${fmt(B.sent)}</div></div>
+        <div><div class="ab-metric-label">Conversions</div><div class="ab-metric-val">${B.cvt}</div></div>
+        <div><div class="ab-metric-label">Open rate</div><div class="ab-metric-val">${fmtPct(B.openRate)}</div></div>
+        <div><div class="ab-metric-label">Conv rate</div><div class="ab-metric-val">${fmtPct(B.convRate, 3)}</div></div>
+      </div>
+      <div class="ab-delta">Δ vs A: <strong>${delta>=0?'+':''}${delta.toFixed(1).replace('.', ',')}%</strong> conv rate</div>
+    </div>`;
+
+  // A/B chart
+  destroyChart('ab');
+  const labels = [], dA = [], dB = [];
+  const cList = f.market==='ALL' ? ['ES','FR','IT'] : [f.market];
+  const pList = f.product==='ALL' ? ['TrustProgram','Highlighted Ad','Ad Boost'] : [f.product];
+  cList.forEach(c => pList.forEach(p => {
+    const rA = data2026.filter(r => r.c===c && r.l===p && r.b==='A');
+    const rB = data2026.filter(r => r.c===c && r.l===p && r.b==='B');
+    const aag = aggRows(rA), bag = aggRows(rB);
+    labels.push(`${c} · ${p}`);
+    dA.push(aag.convRate);
+    dB.push(bag.convRate);
+  }));
+  charts.ab = new Chart(document.getElementById('abChart'), {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label:'Variant A (48h)', data:dA, backgroundColor:'#0B2FAC', borderRadius:4, barPercentage:0.85, categoryPercentage:0.7 },
+      { label:'Variant B (96h)', data:dB, backgroundColor:'#9DACDE', borderRadius:4, barPercentage:0.85, categoryPercentage:0.7 },
+    ]},
+    options: { ...baseOpts, plugins:{...baseOpts.plugins,
+      tooltip:{...baseOpts.plugins.tooltip, callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toFixed(3).replace('.',',')+'%'}}},
+      scales:{...baseOpts.scales, y:{...baseOpts.scales.y, title:{display:true,text:'Conversion rate %',color:'#6B7A99',font:{family:'Open Sans',size:10,weight:'700'}}}}}
+  });
+}
+
+/* ================================================================
+   TAB 2/3 — YoY COMPARISONS
+   ================================================================ */
+function renderComparison(year, prevData) {
+  const f = filters[year];
+  const prevRows = filterRows(prevData, f.market, f.product);
+  const currRows = filterRows(data2026, f.market, f.product);
+  const prev = aggRows(prevRows);
+  const curr = aggRows(currRows);
+  const currUpl = filterRows(upliftData, f.market, f.product);
+  const currRev = currUpl.reduce((s,r)=>s+r.rev,0);
+
+  // YoY KPI cards
+  const yoyLabel = year === '24' ? '2024' : '2025';
+  const cards = [
+    { label: 'Emails sent',  prev: prev.sent, curr: curr.sent, fmt: fmt, invert:false },
+    { label: 'Open rate',    prev: prev.openRate, curr: curr.openRate, fmt: v=>fmtPct(v), invert:false },
+    { label: 'Click rate',   prev: prev.clickRate, curr: curr.clickRate, fmt: v=>fmtPct(v,2), invert:false },
+    { label: 'Conversions',  prev: prev.cvt, curr: curr.cvt, fmt: fmt, invert:false },
+    { label: 'Revenue',      prev: prev.rev, curr: currRev, fmt: fmtMoney, invert:false },
+  ];
+
+  const cardHtml = cards.map(c => {
+    const d = deltaPct(c.curr, c.prev);
+    let cls = 'flat', sym = '→', sign = '';
+    if (d !== null && Math.abs(d) >= 0.5) {
+      if (d > 0) { cls = 'up'; sym = '↑'; sign = '+'; }
+      else { cls = 'down'; sym = '↓'; }
+    }
+    const deltaText = d === null ? 'n/a' : `${sign}${d.toFixed(0)}%`;
+    return `<div class="yoy-card">
+      <div class="yoy-label">${c.label}</div>
+      <div class="yoy-year-row"><span class="yr">${yoyLabel}</span><span class="val">${c.fmt(c.prev)}</span></div>
+      <div class="yoy-year-row current"><span class="yr">2026</span><span class="val">${c.fmt(c.curr)}</span></div>
+      <div class="yoy-delta ${cls}"><span class="arrow">${sym}</span><span>${deltaText} vs ${yoyLabel}</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById(`yoy${year}Grid`).innerHTML = cardHtml;
+
+  // Rates chart (grouped by metric)
+  destroyChart(`cmp${year}Rates`);
+  charts[`cmp${year}Rates`] = new Chart(document.getElementById(`cmp${year}RatesChart`), {
+    type: 'bar',
+    data: {
+      labels: ['Open rate','Click rate','Purchase rate','Conv rate'],
+      datasets: [
+        { label: yoyLabel, data: [prev.openRate, prev.clickRate, prev.purchaseRate, prev.convRate],
+          backgroundColor: '#9DACDE', borderRadius: 4, barPercentage: 0.85, categoryPercentage: 0.7 },
+        { label: '2026', data: [curr.openRate, curr.clickRate, curr.purchaseRate, curr.convRate],
+          backgroundColor: '#0B2FAC', borderRadius: 4, barPercentage: 0.85, categoryPercentage: 0.7 },
+      ]
+    },
+    options: { ...baseOpts, plugins:{...baseOpts.plugins,
+      tooltip:{...baseOpts.plugins.tooltip, callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toFixed(2).replace('.',',')+'%'}}}}
+  });
+
+  // Revenue chart per market
+  destroyChart(`cmp${year}Rev`);
+  const cs = f.market==='ALL' ? ['ES','FR','IT'] : [f.market];
+  const prevRev = cs.map(c => filterRows(prevData, c, f.product).reduce((s,r)=>s+r.rev,0));
+  const currRevByCtry = cs.map(c => filterRows(upliftData, c, f.product).reduce((s,r)=>s+r.rev,0));
+  charts[`cmp${year}Rev`] = new Chart(document.getElementById(`cmp${year}RevChart`), {
+    type: 'bar',
+    data: {
+      labels: cs,
+      datasets: [
+        { label: yoyLabel, data: prevRev, backgroundColor:'#9DACDE', borderRadius:4, barPercentage:0.85, categoryPercentage:0.6 },
+        { label: '2026',   data: currRevByCtry, backgroundColor:'#0B2FAC', borderRadius:4, barPercentage:0.85, categoryPercentage:0.6 },
+      ]
+    },
+    options: { ...baseOpts, plugins:{...baseOpts.plugins,
+      tooltip:{...baseOpts.plugins.tooltip, callbacks:{label:c=>c.dataset.label+': '+new Intl.NumberFormat('de-DE',{minimumFractionDigits:0,maximumFractionDigits:0}).format(c.parsed.y)+' €'}}},
+      scales:{...baseOpts.scales, y:{...baseOpts.scales.y, title:{display:true,text:'Revenue (€)',color:'#6B7A99',font:{family:'Open Sans',size:10,weight:'700'}}}}}
+  });
+
+  // Comparison table
+  const cs2 = f.market==='ALL' ? ['ES','FR','IT'] : [f.market];
+  const ps  = f.product==='ALL' ? ['TrustProgram','Highlighted Ad','Ad Boost'] : [f.product];
+  let rowsHtml = '';
+  let totalPrevSent=0,totalCurrSent=0,totalPrevCvt=0,totalCurrCvt=0,totalPrevRev=0,totalCurrRev=0;
+
+  cs2.forEach(c => {
+    ps.forEach(p => {
+      const pr = aggRows(filterRows(prevData, c, p));
+      const cr = aggRows(filterRows(data2026, c, p));
+      const cRev = filterRows(upliftData, c, p).reduce((s,r)=>s+r.rev,0);
+      totalPrevSent += pr.sent; totalCurrSent += cr.sent;
+      totalPrevCvt += pr.cvt; totalCurrCvt += cr.cvt;
+      totalPrevRev += pr.rev; totalCurrRev += cRev;
+      rowsHtml += `
+        <tr>
+          <td><span class="country-tag ${c.toLowerCase()}">${c}</span></td>
+          <td>${p}</td>
+          <td>${fmt(pr.sent)}</td>
+          <td>${fmt(cr.sent)}</td>
+          <td>${deltaTag(cr.sent, pr.sent)}</td>
+          <td>${fmtPct(pr.openRate)}</td>
+          <td>${fmtPct(cr.openRate)}</td>
+          <td>${deltaTag(cr.openRate, pr.openRate)}</td>
+          <td>${fmt(pr.cvt)}</td>
+          <td>${fmt(cr.cvt)}</td>
+          <td>${fmtMoney(pr.rev)}</td>
+          <td>${fmtMoney(cRev)}</td>
+        </tr>`;
+    });
+  });
+  rowsHtml += `
+    <tr class="subtotal">
+      <td colspan="2">TOTAL</td>
+      <td>${fmt(totalPrevSent)}</td>
+      <td>${fmt(totalCurrSent)}</td>
+      <td>${deltaTag(totalCurrSent, totalPrevSent)}</td>
+      <td colspan="3">—</td>
+      <td>${fmt(totalPrevCvt)}</td>
+      <td>${fmt(totalCurrCvt)}</td>
+      <td>${fmtMoney(totalPrevRev)}</td>
+      <td>${fmtMoney(totalCurrRev)}</td>
+    </tr>`;
+  document.querySelector(`#cmp${year}Table tbody`).innerHTML = rowsHtml;
+}
+
+/* ================================================================
+   FILTER WIRING
+   ================================================================ */
+function setupFilters() {
+  document.querySelectorAll('[data-filter]').forEach(group => {
+    const f = group.dataset.filter; // market2026, product2026, market24, etc.
+    group.querySelectorAll('.pill').forEach(p => p.addEventListener('click', () => {
+      group.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+      p.classList.add('active');
+      const val = p.dataset.val;
+      if (f === 'market2026') filters['2026'].market = val;
+      else if (f === 'product2026') filters['2026'].product = val;
+      else if (f === 'market24') filters['24'].market = val;
+      else if (f === 'product24') filters['24'].product = val;
+      else if (f === 'market25') filters['25'].market = val;
+      else if (f === 'product25') filters['25'].product = val;
+      renderAll();
+    }));
+  });
+}
+
+/* ================================================================
+   TAB WIRING
+   ================================================================ */
+function setupTabs() {
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  }));
+}
+
+/* ================================================================
+   RENDER ALL
+   ================================================================ */
+function renderAll() {
+  render2026();
+  renderComparison('24', data2024);
+  renderComparison('25', data2025);
+  const f = filters['2026'];
+  document.getElementById('filterStateText').textContent =
+    `Scope: ${f.market === 'ALL' ? 'all markets' : f.market} · ${f.product === 'ALL' ? 'all products' : f.product}`;
+}
+
+setupTabs();
+setupFilters();
+// Only render immediately if already unlocked from a previous session;
+// otherwise the unlock() function in the gate script will trigger render.
+if (document.body.classList.contains('unlocked')) {
+  renderAll();
+}
+</script>
+</body>
+</html>
